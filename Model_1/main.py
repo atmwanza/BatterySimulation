@@ -11,6 +11,7 @@ nom_torq_j = 50
 ang_velocity = [-10, -7.5, 2.5, 8, -5, -14, -16, -16, -14, -9, -1.25, 3.25, 7, 13, 14, 17, 17.5, 8, -2, -6.25 ]
 torques = [1,2,3,4]
 x_gait = []
+y_current = []
 y_power_ms = []
 y_power_j = []
 #functions
@@ -35,6 +36,15 @@ def p_joint_cycle():
         y_power_j.append(get_power_mech(nom_torq_j ,ang_velocity[i]))
     return
 
+
+def get_current(p_motor):
+    return p_motor/motor_voltage
+
+#i(t) = PJoint/
+def i_cycle():
+    x_gait.clear()
+    y_current.clear()
+    return
 
 #ignore thermal limits
 #inputs: torque, angular velocity
