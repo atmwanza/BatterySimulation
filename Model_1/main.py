@@ -8,6 +8,8 @@ import math
 #read file data to list
 time_data = []
 joint_power_data = []
+joint_angles = []
+temp_time = []
 weighted_joint_power_data = []
 
 motor_voltage = 12 #volts
@@ -69,6 +71,21 @@ def get_csv_data():
                 joint_power_data.append(float(row[power_col_idx]))
     return
 
+#gets sit to stand angular data from csv
+def get_csv_joint_data():
+    temp_time.clear()
+    joint_angles.clear()
+    with open('SitToStandAngles.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        angle_col_idx = 1
+        for row in file_reader:
+            if len(row) > angle_col_idx:
+                temp_time.append(float(row[time_col_idx]))
+                joint_angles.append(float(row[angle_col_idx]))
+    return
+
 def mechanical_plots():
     p_motoroshaft_cycle()
     p_joint_cycle()
@@ -87,7 +104,7 @@ def mechanical_plots():
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
     plt.xlabel('Gait Cycle %')
     plt.ylabel('Power Joint W')
-    plt.title('P_joint vs time')
+    plt.title('P_joint vs Time')
 
     plt.show()
     return
@@ -99,9 +116,21 @@ def current_plot():
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
     plt.xlabel('Time (s)')
     plt.ylabel('Current (A)')
-    plt.title('Current vs time')
+    plt.title('Current vs Time')
     plt.show()
-    
+
+def angle_plot():
+    plt.figure(4)
+    plt.plot(temp_time, joint_angles)
+    plt.axhline(y=0, color="grey", linestyle='-', linewidth='1')
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Angle')
+    plt.title('Angle  vs Time')
+    plt.show()
+
 get_csv_data()
+get_csv_joint_data()
 #mechanical_plots()
-current_plot()
+#current_plot()
+angle_plot()
