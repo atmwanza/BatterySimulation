@@ -1,6 +1,9 @@
 import matplotlib.pyplot as plt
 import csv
 import math
+import numpy as np
+import pandas as pd
+from scipy.interpolate import CubicSpline
 
 
 #Define some global constants
@@ -108,6 +111,7 @@ def mechanical_plots():
 
     plt.show()
     return
+
 def current_plot():
     current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]
     plt.figure(3)
@@ -118,6 +122,7 @@ def current_plot():
     plt.ylabel('Current (A)')
     plt.title('Current vs Time')
     plt.show()
+    return
 
 def angle_plot():
     plt.figure(4)
@@ -128,9 +133,10 @@ def angle_plot():
     plt.ylabel('Angle')
     plt.title('Angle  vs Time')
     plt.show()
+    return
 
 get_csv_data()
 get_csv_joint_data()
 #mechanical_plots()
-#current_plot()
+current_plot()
 angle_plot()
