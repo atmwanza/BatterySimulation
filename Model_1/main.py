@@ -135,8 +135,40 @@ def angle_plot():
     plt.show()
     return
 
+def average_current():
+    current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]
+    avg_current = np.mean(current_data)
+    print("Average Current (A): ", avg_current)
+    return avg_current
+
+def average_power_gait():
+    motor_power = get_motor_power(joint_power_data)
+    avg_power_gait = np.mean(motor_power)
+    print("Average Power (W): ", avg_power_gait)
+    return avg_power_gait
+def braking_torque():
+    gait_cycle_time = time_data[-1] - time_data[0]
+    #used phys teams data for torque doc
+    #6 degree change in 0.1 sec from heel strike to foot flat
+    delta_theta = 6 * (math.pi/180) #radians
+    delta_t = 0.1 #sec
+    ang_velocity_braking = delta_theta / delta_t #rad/sec
+
+    motor_power = get_motor_power(joint_power_data)
+    min_power = min(motor_power[0:int(len(motor_power)/2)]) #mininum power from the first half of the gait cycle
+    braking_torque = min_power / ang_velocity_braking
+    print("Braking Torque (Nm): ", braking_torque)
+    return braking_torque
+    
+    
+
+
 get_csv_data()
-get_csv_joint_data()
-#mechanical_plots()
+# get_csv_joint_data()
+# 
+# mechanical_plots()
 current_plot()
 angle_plot()
+average_current()
+average_power_gait()
+braking_torque()
