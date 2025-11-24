@@ -24,6 +24,7 @@ nom_torq_j = 50
 
 assumed_weight = 80 #kg
 R_phase = 0.06882 # Ohms
+battery_capacity = 15 #Ah
 
 ang_velocity = [-10, -7.5, 2.5, 8, -5, -14, -16, -16, -14, -9, -1.25, 3.25, 7, 13, 14, 17, 17.5, 8, -2, -6.25 ]
 torques = [1,2,3,4]
@@ -128,7 +129,7 @@ def angle_plot():
     plt.figure(4)
     plt.plot(temp_time, joint_angles)
     plt.axhline(y=0, color="grey", linestyle='-', linewidth='1')
-    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='grey', linestyle='-', linewidth=1)
     plt.xlabel('Time (s)')
     plt.ylabel('Angle')
     plt.title('Angle  vs Time')
@@ -146,6 +147,7 @@ def average_power_gait():
     avg_power_gait = np.mean(motor_power)
     print("Average Power (W): ", avg_power_gait)
     return avg_power_gait
+
 def braking_torque():
     gait_cycle_time = time_data[-1] - time_data[0]
     #used phys teams data for torque doc
@@ -159,16 +161,41 @@ def braking_torque():
     braking_torque = min_power / ang_velocity_braking
     print("Braking Torque (Nm): ", braking_torque)
     return braking_torque
-    
-    
 
+def cum_avg_plot():
+    P_in = get_motor_power(joint_power_data)
+    P_in = [ x * 0.7 for x in P_in] #walking weighted at 70% 
+    # standing accounts for 20% but power is negligible at this phase
+    # sitting accounts for 10% but power is negligible at this phase
+    plt.figure(5)
+    plt.plot(temp_time, P_in)
+    plt.axhline(y=0, color="grey", linestyle='-', linewidth='1')
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Time (s)')
+    plt.ylabel('P_in (W)')
+    plt.title('Power Input vs Time')
+    plt.show()
+    return P_in
+def battery_life_estimate():
+    # assume we aren't capable of regenerative braking for this model
+    current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]  
+    positive_current_data = current_data.copy()
+    for i in range(len(current_data)): # set all negative currents to zero
+        if positive_current_data[i] < 0:
+            positive_current_data[i] = 0
+    avg_current = np.mean(positive_current_data)
+    print("Average Positive Current (A): ",avg_current)
+    battery_life_hours = battery_capacity / avg_current
+    print("Estimated Battery Life (hours): ", battery_life_hours)
+    return
 
 get_csv_data()
-# get_csv_joint_data()
-# 
+#get_csv_joint_data() 
 # mechanical_plots()
-current_plot()
-angle_plot()
+# current_plot()
+#angle_plot()
 average_current()
 average_power_gait()
 braking_torque()
+#cum_avg_plot()
+battery_life_estimate()
