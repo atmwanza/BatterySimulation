@@ -35,9 +35,32 @@ y_current = []
 y_power_ms = []
 y_power_j = []
 
+sts_torque_x = []
+sts_torque_y = []
 #functions
+
+#****************sit to stand stuff****************#
+def get_csv_torque_data():
+    sts_torque_x.clear()
+    sts_torque_y.clear()
+    with open('sts_torque.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        x_col_idx = 0
+        y_col_idx = 1
+        for row in file_reader:
+            if len(row) > y_col_idx:
+                sts_torque_x.append(float(row[x_col_idx]))
+                sts_torque_y.append(float(row[y_col_idx]))
+    return
+
 def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
+
+get_csv_torque_data()
+
+a, b, c = np.polyfit(sts_torque_x, sts_torque_y, 2)
+#****************sit to stand stuff****************#
 
 def get_power_mech(torque,ang):
     return torque*ang
@@ -94,6 +117,8 @@ def get_csv_joint_data():
                 temp_time.append(float(row[time_col_idx]))
                 joint_angles.append(float(row[angle_col_idx]))
     return
+
+
 
 def mechanical_plots():
     p_motorshaft_cycle()
@@ -194,6 +219,9 @@ def battery_life_estimate():
     print("Estimated Battery Life (hours): ", battery_life_hours)
     return
 
+#def plot_sts_torque():
+
+
 get_csv_data()
 #get_csv_joint_data() 
 # mechanical_plots()
@@ -204,4 +232,6 @@ average_power_gait()
 braking_torque()
 #cum_avg_plot()
 battery_life_estimate()
+
+
 
