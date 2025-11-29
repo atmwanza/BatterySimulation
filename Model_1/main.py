@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 import csv
 import math
 import numpy as np
-import pandas as pd
-from scipy.interpolate import CubicSpline
+
 
 
 #Define some global constants
@@ -37,23 +36,11 @@ y_power_j = []
 
 sts_torque_x = []
 sts_torque_y = []
+x_power_elec = []
+y_power_elec = []
 #functions
 
 #****************sit to stand stuff****************#
-def get_csv_torque_data():
-    sts_torque_x.clear()
-    sts_torque_y.clear()
-    with open('sts_torque.csv', 'r', newline='') as power_file:
-        file_reader = csv.reader(power_file)
-        header = next(file_reader)
-        x_col_idx = 0
-        y_col_idx = 1
-        for row in file_reader:
-            if len(row) > y_col_idx:
-                sts_torque_x.append(float(row[x_col_idx]))
-                sts_torque_y.append(float(row[y_col_idx]))
-    return
-
 def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
 
@@ -72,7 +59,6 @@ def get_csv_torque_data():
     return
 
 get_csv_torque_data()
-
 a, b, c = np.polyfit(sts_torque_x, sts_torque_y, 2)
 print(a)
 print(b)
@@ -85,6 +71,39 @@ def power_sts(x):
     av = angular_velocity_sts(x)
     return t*av
 
+def sts_cycle():
+    values = np.linspace(0.0,3.0,100)
+    for i in values:
+        y_power_elec.append(power_sts(i))
+        x_power_elec.append(i)
+
+def sit_to_stand_plots():
+    sts_cycle()
+    plt.figure(6)
+    plt.plot(x_power_elec, y_power_elec)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Time')
+    plt.ylabel('Power Electrical W')
+    plt.title('P_Electrical In Sitting To Standing')
+    plt.savefig("my_plot.png", dpi=300, bbox_inches="tight")
+    #plt.show()
+    return
+def test_plot():
+    temp_x = []
+    temp_y = []
+    for i in range(100):
+        temp_x.append(i)
+        temp_y.append(torque_function(i))
+    plt.figure(7)
+    plt.plot(temp_x, temp_y)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Time')
+    plt.ylabel('Torque Nm')
+    plt.title('Torque Plot')
+    plt.savefig("torque.png", dpi=300, bbox_inches="tight")
+    return
 #****************sit to stand stuff****************#
 print("hi")
 def get_power_mech(torque,ang):
@@ -257,6 +276,8 @@ average_power_gait()
 braking_torque()
 #cum_avg_plot()
 battery_life_estimate()
+#sit_to_stand_plots()
+test_plot()
 
 
 
