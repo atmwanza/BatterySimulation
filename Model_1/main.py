@@ -34,6 +34,9 @@ y_power_ms = []
 y_power_j = []
 
 #functions
+def angular_velocity(x):
+    return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
+
 def get_power_mech(torque,ang):
     return torque*ang
 
