@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import csv
 import math
@@ -34,13 +36,13 @@ y_power_ms = []
 y_power_j = []
 
 #functions
-def angular_velocity(x):
+def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
 
 def get_power_mech(torque,ang):
     return torque*ang
 
-def p_motoroshaft_cycle():
+def p_motorshaft_cycle():
     x_gait.clear()
     y_power_ms.clear()
     for i in range (0,len(ang_velocity)):
@@ -94,7 +96,7 @@ def get_csv_joint_data():
     return
 
 def mechanical_plots():
-    p_motoroshaft_cycle()
+    p_motorshaft_cycle()
     p_joint_cycle()
 
     plt.figure(1)
@@ -202,3 +204,4 @@ average_power_gait()
 braking_torque()
 #cum_avg_plot()
 battery_life_estimate()
+
