@@ -57,11 +57,36 @@ def get_csv_torque_data():
 def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
 
+def get_csv_torque_data():
+    sts_torque_x.clear()
+    sts_torque_y.clear()
+    with open('sts_torque.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        tor_col_idx = 1
+        for row in file_reader:
+            if len(row) > tor_col_idx:
+                sts_torque_x.append(float(row[time_col_idx]))
+                sts_torque_y.append(float(row[tor_col_idx]))
+    return
+
 get_csv_torque_data()
 
 a, b, c = np.polyfit(sts_torque_x, sts_torque_y, 2)
-#****************sit to stand stuff****************#
+print(a)
+print(b)
+print(c)
+def torque_function(x):
+    return a*(x**2) + (b*x) + c
 
+def power_sts(x):
+    t = torque_function(x)
+    av = angular_velocity_sts(x)
+    return t*av
+
+#****************sit to stand stuff****************#
+print("hi")
 def get_power_mech(torque,ang):
     return torque*ang
 
