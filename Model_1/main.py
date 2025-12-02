@@ -38,13 +38,28 @@ sts_torque_x = []
 sts_torque_y = []
 x_power_elec = []
 y_power_elec = []
+max_torque = None
+theta2_t = []
+theta2_y = []
+
+#for scaling s curve to ~2 seconds
+time_scale = 3.0/2.0
 #functions
 
 #****************sit to stand stuff****************#
 def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
-
+def angle_sts_fast(t):
+    # same shape, but completes in 2 s instead of 3
+    t_old = time_scale * t
+    return 141.33 + 39.77 * np.tanh((t_old - 1.85) / 0.37)
+def angular_velocity_sts_fast(t):
+    # chain rule: dθ_new/dt = (dθ_old/dt_old) * dt_old/dt
+    t_old = time_scale * t
+    omega_old = 107.478 * (1 / np.cosh((t_old - 1.85) / 0.37))**2
+    return time_scale * omega_old
 def get_csv_torque_data():
+    global max_torque
     sts_torque_x.clear()
     sts_torque_y.clear()
     with open('sts_torque.csv', 'r', newline='') as power_file:
@@ -56,6 +71,20 @@ def get_csv_torque_data():
             if len(row) > tor_col_idx:
                 sts_torque_x.append(float(row[time_col_idx]))
                 sts_torque_y.append(float(row[tor_col_idx]))
+    max_torque = max(sts_torque_x)
+    return
+def get_theta_2():
+    theta2_y.clear()
+    theta2_t.clear()
+    with open('theta2_plot.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        the_col_idx = 1
+        for row in file_reader:
+            if len(row) > the_col_idx:
+                theta2_t.append(float(row[time_col_idx]))
+                theta2_y.append(float(row[the_col_idx]))
     return
 
 get_csv_torque_data()
@@ -64,8 +93,9 @@ print(a)
 print(b)
 print(c)
 def torque_function(x):
-    return a*(x**2) + (b*x) + c
-
+    if max_torque == None:
+        raise ValueError("max_torque threshold is not set!")
+    return a*(x**2) + (b*x) + c if x <= max_torque else 0
 def power_sts(x):
     t = torque_function(x)
     av = angular_velocity_sts(x)
@@ -76,6 +106,10 @@ def sts_cycle():
     for i in values:
         y_power_elec.append(power_sts(i))
         x_power_elec.append(i)
+
+#****************piecewising****************#
+
+#****************piecewising****************#
 
 def sit_to_stand_plots():
     sts_cycle()
@@ -90,13 +124,16 @@ def sit_to_stand_plots():
     #plt.show()
     return
 def test_plot():
-    temp_x = []
-    temp_y = []
-    for i in range(100):
-        temp_x.append(i)
-        temp_y.append(torque_function(i))
+    get_csv_torque_data()
+
+    # 20 points from 0 to 2 seconds
+    t_vals = np.linspace(0.0, 3.0, 20)
+
+    # evaluate your fitted torque function at those times
+    tau_vals = [torque_function(t) for t in t_vals]
+
     plt.figure(7)
-    plt.plot(temp_x, temp_y)
+    plt.plot(t_vals, tau_vals, marker='o')  # marker='o' so you can see the 20 points
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
     plt.xlabel('Time')
@@ -276,7 +313,7 @@ average_power_gait()
 braking_torque()
 #cum_avg_plot()
 battery_life_estimate()
-#sit_to_stand_plots()
+sit_to_stand_plots()
 test_plot()
 
 
