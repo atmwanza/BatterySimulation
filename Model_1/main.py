@@ -1,5 +1,5 @@
-import matplotlib
-matplotlib.use("Agg")
+# import matplotlib
+# matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import csv
 import math
@@ -20,8 +20,8 @@ motor_voltage = 12 #volts
 lead_wc_eff = 0.358
 lead_bc_eff = 0.495
 ball_eff = 0.838
-nom_torq_ms = 0.459
-nom_torq_j = 50
+# nom_torq_ms = 0.459
+# nom_torq_j = 50
 
 assumed_weight = 80 #kg
 R_phase = 0.06882 # Ohms
@@ -38,27 +38,13 @@ sts_torque_x = []
 sts_torque_y = []
 x_power_elec = []
 y_power_elec = []
-max_torque = None
-theta2_t = []
-theta2_y = []
-
-#for scaling s curve to ~2 seconds
-time_scale = 3.0/2.0
 #functions
 
 #****************sit to stand stuff****************#
 def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
-def angle_sts_fast(t):
-    t_old = time_scale * t
-    return 141.33 + 39.77 * np.tanh((t_old - 1.85) / 0.37)
-def angular_velocity_sts_fast(t):
-    t_old = time_scale * t
-    omega_old = 107.478 * (1 / np.cosh((t_old - 1.85) / 0.37))**2
-    return time_scale * omega_old
 
 def get_csv_torque_data():
-    global max_torque
     sts_torque_x.clear()
     sts_torque_y.clear()
     with open('sts_torque.csv', 'r', newline='') as power_file:
@@ -70,47 +56,26 @@ def get_csv_torque_data():
             if len(row) > tor_col_idx:
                 sts_torque_x.append(float(row[time_col_idx]))
                 sts_torque_y.append(float(row[tor_col_idx]))
-    max_torque = max(sts_torque_x)
-    return
-def get_theta_2():
-    theta2_y.clear()
-    theta2_t.clear()
-    with open('theta2_plot.csv', 'r', newline='') as power_file:
-        file_reader = csv.reader(power_file)
-        header = next(file_reader)
-        time_col_idx = 0
-        the_col_idx = 1
-        for row in file_reader:
-            if len(row) > the_col_idx:
-                theta2_t.append(float(row[time_col_idx]))
-                theta2_y.append(float(row[the_col_idx]))
     return
 
-get_csv_torque_data()
-a, b, c = np.polyfit(sts_torque_x, sts_torque_y, 2)
-print(a)
-print(b)
-print(c)
-def torque_function(x):
-    if max_torque == None:
-        raise ValueError("max_torque threshold is not set!")
-    return a*(x**2) + (b*x) + c if x <= max_torque else 0
+# get_csv_torque_data()
+# a, b, c = np.polyfit(sts_torque_x, sts_torque_y, 2)
+# print(a)
+# print(b)
+# print(c)
+# def torque_function(x):
+#     return a*(x**2) + (b*x) + c
+
 def power_sts(x):
     t = torque_function(x)
     av = angular_velocity_sts(x)
     return t*av
 
 def sts_cycle():
-    x_power_elec.clear()
-    y_power_elec.clear()
-    values = np.linspace(0.0,2.0,100)
+    values = np.linspace(0.0,3.0,100)
     for i in values:
         y_power_elec.append(power_sts(i))
         x_power_elec.append(i)
-
-#****************piecewising****************#
-
-#****************piecewising****************#
 
 def sit_to_stand_plots():
     sts_cycle()
@@ -125,16 +90,13 @@ def sit_to_stand_plots():
     #plt.show()
     return
 def test_plot():
-    get_csv_torque_data()
-
-    # 20 points from 0 to 2 seconds
-    t_vals = np.linspace(0.0, 3.0, 20)
-
-    # evaluate your fitted torque function at those times
-    tau_vals = [torque_function(t) for t in t_vals]
-
+    temp_x = []
+    temp_y = []
+    for i in range(100):
+        temp_x.append(i)
+        temp_y.append(torque_function(i))
     plt.figure(7)
-    plt.plot(t_vals, tau_vals, marker='o')  # marker='o' so you can see the 20 points
+    plt.plot(temp_x, temp_y)
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
     plt.xlabel('Time')
@@ -143,26 +105,39 @@ def test_plot():
     plt.savefig("torque.png", dpi=300, bbox_inches="tight")
     return
 #****************sit to stand stuff****************#
-print("hi")
+#print("hi")
 def get_power_mech(torque,ang):
     return torque*ang
 
-def p_motorshaft_cycle():
-    x_gait.clear()
-    y_power_ms.clear()
-    for i in range (0,len(ang_velocity)):
-        print(i)
-        x_gait.append(i*5)
-        y_power_ms.append(get_power_mech(nom_torq_ms ,ang_velocity[i]))
-    return
+# def p_motorshaft_cycle():
+#     x_gait.clear()
+#     y_power_ms.clear()
+#     for i in range (0,len(ang_velocity)):
+#         print(i)
+#         x_gait.append(i*5)
+#         y_power_ms.append(get_power_mech(nom_torq_ms ,ang_velocity[i]))
+#     return
 
 def p_joint_cycle():
     x_gait.clear()
-    y_power_j.clear()
-    for i in range (0,len(ang_velocity)):
-        print(i)
-        x_gait.append(i*5)
-        y_power_j.append(get_power_mech(nom_torq_j ,ang_velocity[i]))
+    # y_power_j.clear()
+    time_data.clear()
+    joint_power_data.clear()
+    with open('kneeJointPower_final.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        power_col_idx = 1
+        for row in file_reader:
+            if len(row) > power_col_idx:
+                time_data.append(float(row[time_col_idx]))
+                joint_power_data.append(float(row[power_col_idx]))
+        min_val = min(time_data)
+        max_val = max(time_data)
+        
+
+        for i in range(len(time_data)):
+            x_gait.append((time_data[i] - min_val) / (max_val - min_val) * 100)
     return
 
 def get_weighted_list(data):
@@ -203,37 +178,78 @@ def get_csv_joint_data():
 
 
 def mechanical_plots():
-    p_motorshaft_cycle()
-    p_joint_cycle()
-
+    p_joint_cycle() # joint power data, not considering weight
+    
     plt.figure(1)
-    plt.plot(x_gait, y_power_ms)
+    plt.plot(x_gait, joint_power_data)
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
     plt.xlabel('Gait Cycle %')
-    plt.ylabel('Power Motorshaft W')
-    plt.title('P_motorshaft vs time')
-
+    plt.ylabel('Power Joint (W/kg)')
+    plt.title('Joint Power vs Time : Watts per kg')
+    #max, min, avg lines
+    max_power = max(joint_power_data)
+    min_power = min(joint_power_data)
+    avg_power = np.mean(joint_power_data) 
+    # plt.axhline(y=max_power, color='red', linestyle='--', linewidth=1, label='Max Power: {:.2f} W/kg'.format(max_power))
+    # plt.axhline(y=min_power, color='blue', linestyle='--', linewidth=1, label='Min Power: {:.2f} W/kg'.format(min_power))
+    # plt.axhline(y=avg_power, color='green', linestyle='--', linewidth=1, label='Avg Power: {:.2f} W/kg'.format(avg_power))
+    # plt.legend()
+    
+    weighted_joint_power_data = get_weighted_list(joint_power_data) # power with assumed weight
     plt.figure(2)
-    plt.plot(x_gait,y_power_j)
+    plt.plot(x_gait,weighted_joint_power_data)
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
     plt.xlabel('Gait Cycle %')
-    plt.ylabel('Power Joint W')
-    plt.title('P_joint vs Time')
+    plt.ylabel('Power Joint (W)')
+    plt.title('Joint Power vs Time: Weighted')
+    #max, min, avg lines
+    max_power = max(weighted_joint_power_data)
+    min_power = min(weighted_joint_power_data)
+    avg_power = np.mean(weighted_joint_power_data) 
+    plt.axhline(y=max_power, color='red', linestyle='--', linewidth=1, label='Max Power: {:.2f} W'.format(max_power))
+    plt.axhline(y=min_power, color='blue', linestyle='--', linewidth=1, label='Min Power: {:.2f} W'.format(min_power))
+    plt.axhline(y=avg_power, color='green', linestyle='--', linewidth=1, label='Avg Power: {:.2f} W'.format(avg_power))
+    plt.legend()
 
+    motor_power_data = get_motor_power(joint_power_data)
+    plt.figure(3)
+    plt.plot(x_gait,motor_power_data)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Gait Cycle %')
+    plt.ylabel('Power Joint (W)')
+    plt.title('Motorshaft Power vs Time')
+    #max, min, avg lines
+    max_power = max(motor_power_data)
+    min_power = min(motor_power_data)
+    avg_power = np.mean(motor_power_data) 
+    plt.axhline(y=max_power, color='red', linestyle='--', linewidth=1, label='Max Power: {:.2f} W'.format(max_power))
+    plt.axhline(y=min_power, color='blue', linestyle='--', linewidth=1, label='Min Power: {:.2f} W'.format(min_power))
+    plt.axhline(y=avg_power, color='green', linestyle='--', linewidth=1, label='Avg Power: {:.2f} W'.format(avg_power))
+    plt.legend()
     plt.show()
     return
 
 def current_plot():
-    current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]
+    current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) 
+                    / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]
     plt.figure(3)
-    plt.plot(time_data, current_data)
+    plt.plot(x_gait, current_data)
     plt.axhline(y=0, color="grey", linestyle='-', linewidth='1')
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
-    plt.xlabel('Time (s)')
+    plt.xlabel('Gait Cycle %')
     plt.ylabel('Current (A)')
-    plt.title('Current vs Time')
+    plt.title('Current output in the Gait Cycle')
+    ## mark the maximum and minimum and average current on the plot
+    max_current = max(current_data)
+    min_current = min(current_data)
+    avg_current = np.mean(current_data)
+    plt.axhline(y=max_current, color='red', linestyle='--', linewidth=1, label='Max Current: {:.2f} A'.format(max_current))
+    plt.axhline(y=min_current, color='blue', linestyle='--', linewidth=1, label='Min Current: {:.2f} A'.format(min_current))
+    plt.axhline(y=avg_current, color='green', linestyle='--', linewidth=1, label='Avg Current: {:.2f} A'.format(avg_current))
+    plt.legend()
     plt.show()
     return
 
@@ -249,7 +265,8 @@ def angle_plot():
     return
 
 def average_current():
-    current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]
+    current_data = [(-motor_voltage + math.sqrt(motor_voltage ** 2 + 4 * R_phase * p_motor)) 
+                    / (2 * R_phase) for p_motor in get_motor_power(joint_power_data)]
     avg_current = np.mean(current_data)
     print("Average Current (A): ", avg_current)
     return avg_current
@@ -261,7 +278,7 @@ def average_power_gait():
     return avg_power_gait
 
 def braking_torque():
-    gait_cycle_time = time_data[-1] - time_data[0]
+    #gait_cycle_time = time_data[-1] - time_data[0]
     #used phys teams data for torque doc
     #6 degree change in 0.1 sec from heel strike to foot flat
     delta_theta = 6 * (math.pi/180) #radians
@@ -306,16 +323,13 @@ def battery_life_estimate():
 
 get_csv_data()
 #get_csv_joint_data() 
-# mechanical_plots()
-# current_plot()
+mechanical_plots()
+current_plot()
 #angle_plot()
 average_current()
 average_power_gait()
 braking_torque()
 #cum_avg_plot()
 battery_life_estimate()
-sit_to_stand_plots()
-test_plot()
-
-
-
+#sit_to_stand_plots()
+#test_plot()
