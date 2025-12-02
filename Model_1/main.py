@@ -50,14 +50,13 @@ time_scale = 3.0/2.0
 def angular_velocity_sts(x):
     return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
 def angle_sts_fast(t):
-    # same shape, but completes in 2 s instead of 3
     t_old = time_scale * t
     return 141.33 + 39.77 * np.tanh((t_old - 1.85) / 0.37)
 def angular_velocity_sts_fast(t):
-    # chain rule: dθ_new/dt = (dθ_old/dt_old) * dt_old/dt
     t_old = time_scale * t
     omega_old = 107.478 * (1 / np.cosh((t_old - 1.85) / 0.37))**2
     return time_scale * omega_old
+
 def get_csv_torque_data():
     global max_torque
     sts_torque_x.clear()
@@ -102,7 +101,9 @@ def power_sts(x):
     return t*av
 
 def sts_cycle():
-    values = np.linspace(0.0,3.0,100)
+    x_power_elec.clear()
+    y_power_elec.clear()
+    values = np.linspace(0.0,2.0,100)
     for i in values:
         y_power_elec.append(power_sts(i))
         x_power_elec.append(i)
