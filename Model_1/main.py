@@ -6,8 +6,6 @@ import math
 import numpy as np
 from scipy.interpolate import  CubicSpline
 
-cs = CubicSpline
-
 #Define some global constants
 
 #read file data to list
@@ -78,12 +76,20 @@ def get_angle_data():
         ang_col_idx = 1
         for row in file_reader:
             if len(row) > ang_col_idx:
-                t_x.append(float(row[time_col_idx]))
-                t_y.append(float(row[ang_col_idx]))
+                a_x.append(float(row[time_col_idx]))
+                a_y.append(float(row[ang_col_idx]))
     return
 get_angle_data()
 get_torque_data()
-
+cs_tor = CubicSpline(t_x, t_y)
+cs_ang = CubicSpline(a_x, a_y)
+dcs_ang = cs_ang.derivative()
+def tor(t):
+    return cs_tor(t)
+def ang(t):
+    return cs_ang(t)
+def angv(t):
+    return dcs_ang(t) * (math.pi/180.0)
 def torque_plot():
     plt.figure(6)
     plt.plot(t_x, t_y)
@@ -93,6 +99,24 @@ def torque_plot():
     plt.ylabel('Torque (Nm)')
     plt.title('Torque')
     plt.savefig("torque_test.png", dpi=300, bbox_inches="tight")
+    return
+def t_and_a_plot():
+    temp_x = []
+    temp_y = []
+
+    # 20 points from 0 to 2 seconds
+    time_vals = np.linspace(0.0, 2.0, 300)
+    tor_vals = [tor(t) for t in time_vals]
+    angv_vals = [angv(t) for t in time_vals]
+    pow_vals = [angv(t)*(tor(t)) for t in time_vals]
+    plt.figure(9)
+    plt.plot(time_vals, pow_vals)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (W)')
+    plt.title('Power In Sitting to Standing')
+    plt.savefig("stsplot.png", dpi=300, bbox_inches="tight")
     return
 
 #****************new****************#
@@ -381,6 +405,6 @@ battery_life_estimate()
 #plot_s_curve()
 #plot_s_curve_fast()
 torque_plot()
-
+t_and_a_plot()
 
 
