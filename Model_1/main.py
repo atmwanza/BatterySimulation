@@ -48,14 +48,13 @@ time_scale = 3.0/2.0
 
 #****************sit to stand stuff****************#
 def angular_velocity_sts(x):
-    return 107.478*((1/np.cosh((x-1.85)/0.37))**2)
+    d_to_r = math.pi/180.0
+    t_old = (3.0/2.0)*x
+    omega = (d_to_r*107.478)*((1/np.cosh(((t_old)-1.85)/0.37))**2)
+    return omega
 def angle_sts_fast(t):
     t_old = time_scale * t
     return 141.33 + 39.77 * np.tanh((t_old - 1.85) / 0.37)
-def angular_velocity_sts_fast(t):
-    t_old = time_scale * t
-    omega_old = 107.478 * (1 / np.cosh((t_old - 1.85) / 0.37))**2
-    return time_scale * omega_old
 
 def get_csv_torque_data():
     global max_torque
@@ -108,9 +107,65 @@ def sts_cycle():
         y_power_elec.append(power_sts(i))
         x_power_elec.append(i)
 
-#****************piecewising****************#
+#****************s curve test****************#
+def plot_s_curve():
+    # --- your original S-curve parameters ---
+    A = 141.33     # vertical shift
+    B = 39.77      # amplitude
+    C = 1.85       # horizontal shift
+    D = 0.37       # slope width
 
-#****************piecewising****************#
+    def angle_sts(t):
+        """Original sit-to-stand S-curve for joint angle (degrees)."""
+        return A + B * np.tanh((t - C) / D)
+
+    # sample time from 0 to 2 seconds
+    t_vals = np.linspace(0.0, 2.0, 400)
+    angle_vals = [angle_sts(t) for t in t_vals]
+
+    # plot
+    plt.figure(figsize=(8,4))
+    plt.plot(t_vals, angle_vals, color="blue")
+    plt.axhline(0, color="gray", linewidth=1)
+    plt.axvline(0, color="gray", linewidth=1)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Angle (degrees)")
+    plt.title("Original S-Curve Angle (0–2 seconds)")
+    plt.grid(True)
+
+    # save instead of showing
+    plt.savefig("s_plot.png", dpi=300, bbox_inches="tight")
+    plt.close()
+
+
+def plot_s_curve_fast():
+    # original parameters
+    A = 141.33
+    B = 39.77
+    C = 1.85
+    D = 0.37
+
+    TIME_SCALE = 3.0 / 2.0  # squeeze 3s movement into 2s
+
+    def angle_sts_old(t):
+        return A + B * np.tanh((t - C) / D)
+
+    def angle_sts_fast(t):
+        t_old = TIME_SCALE * t
+        return angle_sts_old(t_old)
+
+    t_vals = np.linspace(0.0, 2.0, 400)
+    angle_vals = [angle_sts_fast(t) for t in t_vals]
+
+    plt.figure(figsize=(8, 4))
+    plt.plot(t_vals, angle_vals, color="red")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Angle (degrees)")
+    plt.title("Time-Compressed S-Curve Angle (0–2 seconds)")
+    plt.grid(True)
+    plt.savefig("s_plot_fast.png", dpi=300, bbox_inches="tight")
+    plt.close()
+#****************s curve test****************#
 
 def sit_to_stand_plots():
     sts_cycle()
@@ -118,8 +173,8 @@ def sit_to_stand_plots():
     plt.plot(x_power_elec, y_power_elec)
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
-    plt.xlabel('Time')
-    plt.ylabel('Power Electrical W')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power Electrical (W)')
     plt.title('P_Electrical In Sitting To Standing')
     plt.savefig("my_plot.png", dpi=300, bbox_inches="tight")
     #plt.show()
@@ -131,7 +186,7 @@ def test_plot():
     t_vals = np.linspace(0.0, 3.0, 20)
 
     # evaluate your fitted torque function at those times
-    tau_vals = [torque_function(t) for t in t_vals]
+    tau_vals = [angular_velocity_sts(t) for t in t_vals]
 
     plt.figure(7)
     plt.plot(t_vals, tau_vals, marker='o')  # marker='o' so you can see the 20 points
@@ -143,7 +198,6 @@ def test_plot():
     plt.savefig("torque.png", dpi=300, bbox_inches="tight")
     return
 #****************sit to stand stuff****************#
-print("hi")
 def get_power_mech(torque,ang):
     return torque*ang
 
@@ -316,6 +370,8 @@ braking_torque()
 battery_life_estimate()
 sit_to_stand_plots()
 test_plot()
+plot_s_curve()
+plot_s_curve_fast()
 
 
 
