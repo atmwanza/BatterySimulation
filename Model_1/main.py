@@ -48,10 +48,24 @@ time_scale = 3.0/2.0
 
 #****************sit to stand stuff****************#
 def angular_velocity_sts(x):
-    d_to_r = math.pi/180.0
-    t_old = (3.0/2.0)*x
-    omega = (d_to_r*107.478)*((1/np.cosh(((t_old)-1.85)/0.37))**2)
-    return omega
+    #d_to_r = math.pi/180.0
+    #t_old = (3.0/2.0)*x
+    #omega = (d_to_r*107.478)*((1/np.cosh(((t_old)-1.85)/0.37))**2)
+    #return omega
+    # time scaling for 2-second STS
+    t_old = (3.0/2.0) * x
+
+    # sech^2() term for the derivative
+    u = (t_old - 1.85) / 0.37
+
+    # derivative of B*tanh(u) = (B/D) * sech^2(u)
+    omega_deg = (39.77 / 0.37) * (1 / np.cosh(u))**2   # deg/s
+
+    # convert to rad/s
+    omega_rad = omega_deg * (math.pi / 180.0)
+
+    # chain rule: dθ_new/dt = dθ_old/dt_old * dt_old/dt
+    return (3.0/2.0) * omega_rad
 def angle_sts_fast(t):
     t_old = time_scale * t
     return 141.33 + 39.77 * np.tanh((t_old - 1.85) / 0.37)
@@ -93,7 +107,7 @@ print(c)
 def torque_function(x):
     if max_torque == None:
         raise ValueError("max_torque threshold is not set!")
-    return a*(x**2) + (b*x) + c if x <= max_torque else 0
+    return a*(x**2) + (b*x) + c #if x <= max_torque else 0
 def power_sts(x):
     t = torque_function(x)
     av = angular_velocity_sts(x)
