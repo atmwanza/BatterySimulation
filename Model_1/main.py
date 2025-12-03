@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import csv
 import math
 import numpy as np
+from scipy.interpolate import  CubicSpline
 
-
+cs = CubicSpline
 
 #Define some global constants
 
@@ -42,10 +43,59 @@ max_torque = None
 theta2_t = []
 theta2_y = []
 
+t_y = []
+t_x = []
+a_y = []
+a_x = []
+
 #for scaling s curve to ~2 seconds
 time_scale = 3.0/2.0
 #functions
 
+#****************new****************#
+def get_torque_data():
+    global max_torque
+    t_x.clear()
+    t_y.clear()
+    with open('better_torque.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        tor_col_idx = 1
+        for row in file_reader:
+            if len(row) > tor_col_idx:
+                t_x.append(float(row[time_col_idx]))
+                t_y.append(float(row[tor_col_idx]))
+    return
+def get_angle_data():
+    global max_torque
+    a_x.clear()
+    a_y.clear()
+    with open('better_angle.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        ang_col_idx = 1
+        for row in file_reader:
+            if len(row) > ang_col_idx:
+                t_x.append(float(row[time_col_idx]))
+                t_y.append(float(row[ang_col_idx]))
+    return
+get_angle_data()
+get_torque_data()
+
+def torque_plot():
+    plt.figure(6)
+    plt.plot(t_x, t_y)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.xlabel('Time (s)')
+    plt.ylabel('Torque (Nm)')
+    plt.title('Torque')
+    plt.savefig("torque_test.png", dpi=300, bbox_inches="tight")
+    return
+
+#****************new****************#
 #****************sit to stand stuff****************#
 def angular_velocity_sts(x):
     #d_to_r = math.pi/180.0
@@ -122,63 +172,7 @@ def sts_cycle():
         x_power_elec.append(i)
 
 #****************s curve test****************#
-def plot_s_curve():
-    # --- your original S-curve parameters ---
-    A = 141.33     # vertical shift
-    B = 39.77      # amplitude
-    C = 1.85       # horizontal shift
-    D = 0.37       # slope width
 
-    def angle_sts(t):
-        """Original sit-to-stand S-curve for joint angle (degrees)."""
-        return A + B * np.tanh((t - C) / D)
-
-    # sample time from 0 to 2 seconds
-    t_vals = np.linspace(0.0, 2.0, 400)
-    angle_vals = [angle_sts(t) for t in t_vals]
-
-    # plot
-    plt.figure(figsize=(8,4))
-    plt.plot(t_vals, angle_vals, color="blue")
-    plt.axhline(0, color="gray", linewidth=1)
-    plt.axvline(0, color="gray", linewidth=1)
-    plt.xlabel("Time (s)")
-    plt.ylabel("Angle (degrees)")
-    plt.title("Original S-Curve Angle (0–2 seconds)")
-    plt.grid(True)
-
-    # save instead of showing
-    plt.savefig("s_plot.png", dpi=300, bbox_inches="tight")
-    plt.close()
-
-
-def plot_s_curve_fast():
-    # original parameters
-    A = 141.33
-    B = 39.77
-    C = 1.85
-    D = 0.37
-
-    TIME_SCALE = 3.0 / 2.0  # squeeze 3s movement into 2s
-
-    def angle_sts_old(t):
-        return A + B * np.tanh((t - C) / D)
-
-    def angle_sts_fast(t):
-        t_old = TIME_SCALE * t
-        return angle_sts_old(t_old)
-
-    t_vals = np.linspace(0.0, 2.0, 400)
-    angle_vals = [angle_sts_fast(t) for t in t_vals]
-
-    plt.figure(figsize=(8, 4))
-    plt.plot(t_vals, angle_vals, color="red")
-    plt.xlabel("Time (s)")
-    plt.ylabel("Angle (degrees)")
-    plt.title("Time-Compressed S-Curve Angle (0–2 seconds)")
-    plt.grid(True)
-    plt.savefig("s_plot_fast.png", dpi=300, bbox_inches="tight")
-    plt.close()
 #****************s curve test****************#
 
 def sit_to_stand_plots():
@@ -382,10 +376,11 @@ average_power_gait()
 braking_torque()
 #cum_avg_plot()
 battery_life_estimate()
-sit_to_stand_plots()
-test_plot()
-plot_s_curve()
-plot_s_curve_fast()
+#sit_to_stand_plots()
+#test_plot()
+#plot_s_curve()
+#plot_s_curve_fast()
+torque_plot()
 
 
 
