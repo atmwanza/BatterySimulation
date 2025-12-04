@@ -120,6 +120,40 @@ def t_and_a_plot():
     return
 
 #****************new****************#
+def get_theta_2_joint_data():
+    theta2_y.clear()
+    theta2_t.clear()
+    with open('theta2_plot.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx = 0
+        angle_col_idx = 1
+        for row in file_reader:
+            if len(row) > angle_col_idx:
+                theta2_t.append(float(row[time_col_idx]))
+                theta2_y.append(float(row[angle_col_idx]))
+    return
+get_theta_2_joint_data()
+cs_theta_2 = CubicSpline(theta2_t,theta2_y)
+def f_theta_2(t):
+    return cs_theta_2(t)
+def angle_plots():
+    temp_x = []
+    temp_y = []
+
+    # 20 points from 0 to 2 seconds
+    time_vals = np.linspace(0.0, 3.0, 300)
+    tor_vals = [tor(t) for t in time_vals]
+    angle_vals = [f_theta_2(t) for t in time_vals]
+    plt.figure(9)
+    plt.plot(time_vals, angle_vals)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    #plt.xlabel('Time (s)')
+    #plt.ylabel('Power (W)')
+    plt.title('Theta2')
+    plt.savefig("theta2plot.png", dpi=300, bbox_inches="tight")
+    return
 #****************sit to stand stuff****************#
 def angular_velocity_sts(x):
     #d_to_r = math.pi/180.0
@@ -404,7 +438,8 @@ battery_life_estimate()
 #test_plot()
 #plot_s_curve()
 #plot_s_curve_fast()
-torque_plot()
-t_and_a_plot()
+#torque_plot()
+#t_and_a_plot()
+angle_plots()
 
 
