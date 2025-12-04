@@ -76,13 +76,23 @@ a_x = []
 a_y = []
 
 # Inputs for dataset 3
+subject_mass = 80
+subject_height = 1.84
+
+#sit to stand
 a3_x = []
 a3_y = []
 t3_x = []
 t3_y = []
 
-total_time = 3.0
+total_time = 2.0
+#stand to sit
+a3_xn = []
+a3_yn = []
+t3_xn = []
+t3_yn = []
 
+total_timen = 1
 
 # ============================================================
 #  CSV LOADING FUNCTIONS (TORQUE, ANGLE, THETA2, GAIT, etc.)
@@ -225,6 +235,36 @@ def get_csv_torque3_data():
                 t3_x.append(float(row[time_col_idx]))
                 t3_y.append(float(row[angle_col_idx]))
 
+def get_csv_angle3n_data():
+    """
+    Load sit-to-stand angle vs time from SitToStandAngles.csv.
+    """
+    a3_xn.clear()
+    a3_yn.clear()
+    with open('standtosit_angles.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx  = 0
+        angle_col_idx = 1
+        for row in file_reader:
+            if len(row) > angle_col_idx:
+                a3_xn.append(float(row[time_col_idx]))
+                a3_yn.append(180.0 - float(row[angle_col_idx]))
+def get_csv_torque3n_data():
+    """
+    Load sit-to-stand torque vs time from SitToStandAngles.csv.
+    """
+    t3_xn.clear()
+    t3_yn.clear()
+    with open('standtosit_torque.csv', 'r', newline='') as power_file:
+        file_reader = csv.reader(power_file)
+        header = next(file_reader)
+        time_col_idx  = 0
+        angle_col_idx = 1
+        for row in file_reader:
+            if len(row) > angle_col_idx:
+                t3_xn.append(float(row[time_col_idx]))
+                t3_yn.append(float(row[angle_col_idx]))
 
 # ============================================================
 #  SPLINE SETUP FOR TORQUE / ANGLE / THETA2
@@ -266,10 +306,18 @@ def f_theta_2(t):
 get_csv_angle3_data()
 get_csv_torque3_data()
 
+get_csv_angle3n_data()
+get_csv_torque3n_data()
+
 cs_ang3 = CubicSpline(a3_x,a3_y)
 cs_tor3 = CubicSpline(t3_x,t3_y)
 
+cs_ang3n = CubicSpline(a3_xn,a3_yn)
+cs_tor3n = CubicSpline(t3_xn,t3_yn)
+
 dcs_ang3 = cs_ang3.derivative()
+dcs_ang3n = cs_ang3n.derivative()
+
 
 def omega3_phase(p):
     """
@@ -287,9 +335,23 @@ def omega3_time(t):
     """
     p = t / total_time
     return omega3_phase(p)
+def omega3n_phase(p):
+    """
+    Angular velocity (rad/s) as a function of *phase* p in [0,1].
+    Converts derivative wrt phase into derivative wrt time.
+    """
+    deg_per_phase = dcs_ang3n(p)              # dθ/dphase (deg per 1.0)
+    deg_per_sec   = deg_per_phase  / total_timen
+    return deg_per_sec * (math.pi / 180.0)   # convert to rad/s
 
-subject_mass = 80
-subject_height = 1.85
+
+def omega3n_time(t):
+    """
+    Angular velocity (rad/s) as a function of real time t.
+    """
+    p = t / total_timen
+    return omega3n_phase(p)
+
 
 def torque3_phase(p):
     """
@@ -305,13 +367,27 @@ def torque3_time(t):
     """
     p = t / total_time
     return torque3_phase(p)
+def torque3n_phase(p):
+    """
+    Real torque (N·m) from normalized torque curve digitized from the paper.
+    """
+    tau_norm = cs_tor3n(p)  # normalized torque (N·m/(kg·m))
+    return tau_norm * subject_height * subject_mass
+
+
+def torque3n_time(t):
+    """
+    Real torque (N·m) as a function of time.
+    """
+    p = t / total_timen
+    return torque3n_phase(p)
+
 
 def power3(t):
     return torque3_time(t)*omega3_time(t)
-def angular_velocity3(t):
-    return dcs_ang3(t)
-def torque3(t):
-    return cs_tor3(t)
+def power3n(t):
+    return torque3n_time(t)*omega3n_time(t)
+
 
 # ============================================================
 #  PLOTTING: TORQUE, POWER, ANGLES
@@ -361,7 +437,7 @@ def angle_plots():
 
 def powerelec3_plots():
     """
-    Plot theta2 vs time over a [0, 3] s interval using cs_theta_2.
+    Plot angular velocity * torque, with both as functions of time to get the equivalent electrical Power.
     """
     time_vals   = np.linspace(0.0, total_time, 200)
     power_vals = [power3(t) for t in time_vals]
@@ -373,6 +449,17 @@ def powerelec3_plots():
     plt.xlabel('Time (s)')
     plt.ylabel('Power (W)')
     plt.savefig("power.png", dpi=300, bbox_inches="tight")
+
+    time2_vals   = np.linspace(0.0, total_timen, 200)
+    power2_vals = [abs(power3n(t)) for t in time2_vals]
+    plt.figure(11)
+    plt.plot(time2_vals, power2_vals)
+    plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
+    plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
+    plt.title('Power_Electrical from Stand to Sit (80kg 1.84m)')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (W)')
+    plt.savefig("power2.png", dpi=300, bbox_inches="tight")
 # ============================================================
 #  ANALYTIC SIT-TO-STAND MODEL (TANH-BASED ANGLE)
 # ============================================================
