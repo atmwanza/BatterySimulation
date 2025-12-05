@@ -76,8 +76,8 @@ a_x = []
 a_y = []
 
 # Inputs for dataset 3
-subject_mass = 80
-subject_height = 1.84
+subject_mass = 125
+subject_height = 1.93
 
 #sit to stand
 a3_x = []
@@ -92,7 +92,7 @@ a3_yn = []
 t3_xn = []
 t3_yn = []
 
-total_timen = 1
+total_timen = 2.0
 
 # ============================================================
 #  CSV LOADING FUNCTIONS (TORQUE, ANGLE, THETA2, GAIT, etc.)
@@ -274,9 +274,9 @@ def get_csv_torque3n_data():
 get_angle_data()
 get_torque_data()
 
-cs_tor = CubicSpline(t_x, t_y)         # torque vs time
-cs_ang = CubicSpline(a_x, a_y)         # angle vs time
-dcs_ang = cs_ang.derivative()          # d(angle)/dt (deg/s if angle is in degrees)
+cs_tor = CubicSpline(t_x, t_y)
+cs_ang = CubicSpline(a_x, a_y)
+dcs_ang = cs_ang.derivative()
 
 
 def tor(t):
@@ -441,17 +441,21 @@ def powerelec3_plots():
     """
     time_vals   = np.linspace(0.0, total_time, 200)
     power_vals = [power3(t) for t in time_vals]
+    max_power = max(power_vals)
     plt.figure(10)
     plt.plot(time_vals, power_vals)
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
-    plt.title('Power_Electrical from Sit to Stand (80kg 1.84m)')
+    plt.title('Power_Electrical from Sit to Stand (125kg 1.93m)')
     plt.xlabel('Time (s)')
     plt.ylabel('Power (W)')
+    plt.axhline(y=max_power, color='red', linestyle='--', linewidth=1, label='Max Power: {:.2f} W'.format(max_power))
+    plt.legend()
     plt.savefig("power.png", dpi=300, bbox_inches="tight")
 
     time2_vals   = np.linspace(0.0, total_timen, 200)
     power2_vals = [abs(power3n(t)) for t in time2_vals]
+    max_power2 = max(power2_vals)
     plt.figure(11)
     plt.plot(time2_vals, power2_vals)
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
@@ -459,6 +463,8 @@ def powerelec3_plots():
     plt.title('Power_Electrical from Stand to Sit (80kg 1.84m)')
     plt.xlabel('Time (s)')
     plt.ylabel('Power (W)')
+    plt.axhline(y=max_power2, color='red', linestyle='--', linewidth=1, label='Max Power: {:.2f} W'.format(max_power2))
+    plt.legend()
     plt.savefig("power2.png", dpi=300, bbox_inches="tight")
 # ============================================================
 #  ANALYTIC SIT-TO-STAND MODEL (TANH-BASED ANGLE)
@@ -549,17 +555,17 @@ def test_plot():
     Debug plot for angular_velocity_sts over [0, 3]s.
     """
     get_csv_torque_data()
-    t_vals   = np.linspace(0.0, 3.0, 20)
-    tau_vals = [angular_velocity_sts(t) for t in t_vals]
+    t_vals   = np.linspace(0.0, 3.0, 200)
+    tau_vals = [power_sts(t) for t in t_vals]
 
     plt.figure(7)
     plt.plot(t_vals, tau_vals, marker='o')
     plt.axhline(y=0, color='gray', linestyle='-', linewidth=1)
     plt.axvline(x=0, color='gray', linestyle='-', linewidth=1)
-    plt.xlabel('Time')
-    plt.ylabel('Torque Nm')  # NOTE: actually plotting angular velocity here
-    plt.title('Torque Plot')
-    plt.savefig("torque.png", dpi=300, bbox_inches="tight")
+    plt.xlabel('Time (s)')
+    plt.ylabel('Power (W)')  # NOTE: actually plotting angular velocity here
+    plt.title('Electrical Power during Sit to Stand')
+    plt.savefig("PowerTest.png", dpi=300, bbox_inches="tight")
 
 
 # ============================================================
@@ -766,7 +772,7 @@ battery_life_estimate()
 # angle_plot()
 # cum_avg_plot()
 # sit_to_stand_plots()
-# test_plot()
+test_plot()
 # torque_plot()
 # t_and_a_plot()
 angle_plots()
